@@ -13,11 +13,16 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class BDConection {
-    private static final String URL = "jdbc:postgresql://localhost:5432/CMP1611-Lidia-Liandra-Matheus-Paulo";
-    private static final String USUARIO = "lidia";
+    private static final String URL = "jdbc:postgresql://localhost:5432/CMP1611- Lidia-Liandra-Matheus-Paulo";
+    private static final String USUARIO = "postgres";
     private static final String SENHA = "5533";
 
     public static Connection conectar() throws SQLException {
-        return DriverManager.getConnection(URL, USUARIO, SENHA);
+        try {
+            Class.forName("org.postgresql.Driver"); // Ajuste o driver conforme seu banco de dados
+            return DriverManager.getConnection(URL, USUARIO, SENHA);
+        } catch (ClassNotFoundException e) {
+            throw new SQLException("Driver do banco de dados não encontrado.", e);
+        }
     }
 }

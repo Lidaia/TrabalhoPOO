@@ -1,4 +1,4 @@
-package gui;
+package Main;
 
 import java.awt.*;
 import javax.swing.*;
@@ -7,19 +7,24 @@ import java.awt.event.ActionListener;
 
 import DAO.PassageiroDAO;
 import DAO.MotoristaDAO;
+import DAO.PessoasDAO;
 import DAO.ViagemDAO;
 import entidades.Passageiro;
 import entidades.Motorista;
+import entidades.Pessoas;
 import entidades.Viagem;
+import conection.BDConection;
 
 class MainFrame extends JFrame {
     private PassageiroDAO passageiroDAO;
     private MotoristaDAO motoristaDAO;
+    private PessoasDAO pessoasDAO;
     private ViagemDAO viagemDAO;
 
     public MainFrame() {
         passageiroDAO = new PassageiroDAO();
         motoristaDAO = new MotoristaDAO();
+        pessoasDAO = new PessoasDAO();
         viagemDAO = new ViagemDAO();
         
         setTitle("Sistema de Cadastro e Viagem");
@@ -30,108 +35,144 @@ class MainFrame extends JFrame {
         JTabbedPane tabbedPane = new JTabbedPane();
 
         // Painel de Cadastro de Pessoa
-        JPanel panelPessoa = new JPanel(new GridLayout(8, 2));
-        panelPessoa.add(new JLabel("CPF:"));
+        JPanel panelPessoa = new JPanel(new BorderLayout());
+        JPanel commonPanel = new JPanel(new GridLayout(7, 2));
+        commonPanel.add(new JLabel("CPF:"));
         JTextField cpfFieldPessoa = new JTextField();
-        panelPessoa.add(cpfFieldPessoa);
+        commonPanel.add(cpfFieldPessoa);
 
-        panelPessoa.add(new JLabel("Nome:"));
+        commonPanel.add(new JLabel("Nome:"));
         JTextField nomeField = new JTextField();
-        panelPessoa.add(nomeField);
+        commonPanel.add(nomeField);
 
-        panelPessoa.add(new JLabel("Endereço:"));
+        commonPanel.add(new JLabel("Endereço:"));
         JTextField enderecoField = new JTextField();
-        panelPessoa.add(enderecoField);
+        commonPanel.add(enderecoField);
 
-        panelPessoa.add(new JLabel("Telefone:"));
+        commonPanel.add(new JLabel("Telefone:"));
         JTextField telefoneField = new JTextField();
-        panelPessoa.add(telefoneField);
+        commonPanel.add(telefoneField);
 
-        panelPessoa.add(new JLabel("Sexo:"));
+        commonPanel.add(new JLabel("Sexo:"));
         JTextField sexoField = new JTextField();
-        panelPessoa.add(sexoField);
+        commonPanel.add(sexoField);
 
-        panelPessoa.add(new JLabel("Email:"));
+        commonPanel.add(new JLabel("Email:"));
         JTextField emailField = new JTextField();
-        panelPessoa.add(emailField);
+        commonPanel.add(emailField);
 
-        panelPessoa.add(new JLabel("Tipo (Passageiro/Motorista):"));
-        JTextField tipoField = new JTextField();
-        panelPessoa.add(tipoField);
+        commonPanel.add(new JLabel("Tipo:"));
+        String[] tipos = {"Selecione", "Passageiro", "Motorista"};
+        JComboBox<String> tipoComboBox = new JComboBox<>(tipos);
+        commonPanel.add(tipoComboBox);
+
+        JPanel especificoPanel = new JPanel();
+        panelPessoa.add(commonPanel, BorderLayout.NORTH);
+        panelPessoa.add(especificoPanel, BorderLayout.CENTER);
+
+        tipoComboBox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                especificoPanel.removeAll();
+                if (tipoComboBox.getSelectedItem().equals("Passageiro")) {
+                    especificoPanel.setLayout(new GridLayout(4, 2));
+                    especificoPanel.add(new JLabel("Cartão de Crédito:"));
+                    JTextField cartaoField = new JTextField();
+                    especificoPanel.add(cartaoField);
+
+                    especificoPanel.add(new JLabel("Bandeira do Cartão:"));
+                    JTextField bandeiraField = new JTextField();
+                    especificoPanel.add(bandeiraField);
+
+                    especificoPanel.add(new JLabel("Cidade de Origem:"));
+                    JTextField cidadeField = new JTextField();
+                    especificoPanel.add(cidadeField);
+                    
+                    especificoPanel.revalidate();
+                    especificoPanel.repaint();
+                } else if (tipoComboBox.getSelectedItem().equals("Motorista")) {
+                    especificoPanel.setLayout(new GridLayout(4, 2));
+                    especificoPanel.add(new JLabel("CNH:"));
+                    JTextField cnhField = new JTextField();
+                    especificoPanel.add(cnhField);
+
+                    especificoPanel.add(new JLabel("Banco:"));
+                    JTextField bancoField = new JTextField();
+                    especificoPanel.add(bancoField);
+
+                    especificoPanel.add(new JLabel("Agência:"));
+                    JTextField agenciaField = new JTextField();
+                    especificoPanel.add(agenciaField);
+
+                    especificoPanel.add(new JLabel("Conta:"));
+                    JTextField contaField = new JTextField();
+                    especificoPanel.add(contaField);
+                    
+                    especificoPanel.revalidate();
+                    especificoPanel.repaint();
+                }
+            }
+        });
 
         JButton cadastrarPessoaButton = new JButton("Cadastrar Pessoa");
         cadastrarPessoaButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if (tipoComboBox.getSelectedItem().equals("Selecione")) {
+                    JOptionPane.showMessageDialog(MainFrame.this, "Por favor, selecione um tipo válido (Passageiro ou Motorista).");
+                    return;
+                }
+
                 long cpf = Long.parseLong(cpfFieldPessoa.getText());
                 String nome = nomeField.getText();
                 String endereco = enderecoField.getText();
                 int telefone = Integer.parseInt(telefoneField.getText());
                 char sexo = sexoField.getText().charAt(0);
                 String email = emailField.getText();
-                String tipo = tipoField.getText();
+                String tipo = (String) tipoComboBox.getSelectedItem();
 
-                if (tipo.equalsIgnoreCase("passageiro")) {
-                    JPanel panelPassageiro = new JPanel(new GridLayout(3, 2));
-                    panelPassageiro.add(new JLabel("Cartão de Crédito:"));
-                    JTextField cartaoField = new JTextField();
-                    panelPassageiro.add(cartaoField);
+                Pessoas pessoa = new Pessoas();
+                pessoa.setCpf(cpf);
+                pessoa.setNome(nome);
+                pessoa.setEndereco(endereco);
+                pessoa.setTelefone(telefone);
+                pessoa.setSexo(sexo);
+                pessoa.setEmail(email);
 
-                    panelPassageiro.add(new JLabel("Bandeira do Cartão:"));
-                    JTextField bandeiraField = new JTextField();
-                    panelPassageiro.add(bandeiraField);
+                pessoasDAO.adicionarPessoa(pessoa);
 
-                    panelPassageiro.add(new JLabel("Cidade de Origem:"));
-                    JTextField cidadeField = new JTextField();
-                    panelPassageiro.add(cidadeField);
+                if (tipo.equals("Passageiro")) {
+                    JTextField cartaoField = (JTextField) especificoPanel.getComponent(1);
+                    JTextField bandeiraField = (JTextField) especificoPanel.getComponent(3);
+                    JTextField cidadeField = (JTextField) especificoPanel.getComponent(5);
 
-                    int result = JOptionPane.showConfirmDialog(null, panelPassageiro, "Cadastro de Passageiro", JOptionPane.OK_CANCEL_OPTION);
-                    if (result == JOptionPane.OK_OPTION) {
-                        Passageiro passageiro = new Passageiro();
-                        passageiro.setCpf(cpf);
-                        passageiro.setCartaoCredito(cartaoField.getText());
-                        passageiro.setBandeiraCartao(bandeiraField.getText());
-                        passageiro.setCidadeOrigem(cidadeField.getText());
+                    Passageiro passageiro = new Passageiro();
+                    passageiro.setCpfPassag(cpf);
+                    passageiro.setCartaoCred(cartaoField.getText());
+                    passageiro.setBandeiraCartao(bandeiraField.getText());
+                    passageiro.setCidadeOrig(cidadeField.getText());
 
-                        passageiroDAO.adicionarPassageiro(passageiro);
-                        JOptionPane.showMessageDialog(MainFrame.this, "Passageiro cadastrado com sucesso!");
-                    }
-                } else if (tipo.equalsIgnoreCase("motorista")) {
-                    JPanel panelMotorista = new JPanel(new GridLayout(4, 2));
-                    panelMotorista.add(new JLabel("CNH:"));
-                    JTextField cnhField = new JTextField();
-                    panelMotorista.add(cnhField);
+                    passageiroDAO.adicionarPassageiro(passageiro);
+                    JOptionPane.showMessageDialog(MainFrame.this, "Passageiro cadastrado com sucesso!");
+                } else if (tipo.equals("Motorista")) {
+                    JTextField cnhField = (JTextField) especificoPanel.getComponent(1);
+                    JTextField bancoField = (JTextField) especificoPanel.getComponent(3);
+                    JTextField agenciaField = (JTextField) especificoPanel.getComponent(5);
+                    JTextField contaField = (JTextField) especificoPanel.getComponent(7);
 
-                    panelMotorista.add(new JLabel("Banco:"));
-                    JTextField bancoField = new JTextField();
-                    panelMotorista.add(bancoField);
+                    Motorista motorista = new Motorista();
+                    motorista.setCpfMotorista(cpf);
+                    motorista.setCnh(cnhField.getText());
+                    motorista.setBancoMot(Integer.parseInt(bancoField.getText()));
+                    motorista.setAgenciaMot(Integer.parseInt(agenciaField.getText()));
+                    motorista.setContaMot(Integer.parseInt(contaField.getText()));
 
-                    panelMotorista.add(new JLabel("Agência:"));
-                    JTextField agenciaField = new JTextField();
-                    panelMotorista.add(agenciaField);
-
-                    panelMotorista.add(new JLabel("Conta:"));
-                    JTextField contaField = new JTextField();
-                    panelMotorista.add(contaField);
-
-                    int result = JOptionPane.showConfirmDialog(null, panelMotorista, "Cadastro de Motorista", JOptionPane.OK_CANCEL_OPTION);
-                    if (result == JOptionPane.OK_OPTION) {
-                        Motorista motorista = new Motorista();
-                        motorista.setCpf(cpf);
-                        motorista.setCnh(cnhField.getText());
-                        motorista.setBanco(Integer.parseInt(bancoField.getText()));
-                        motorista.setAgencia(Integer.parseInt(agenciaField.getText()));
-                        motorista.setConta(Integer.parseInt(contaField.getText()));
-
-                        motoristaDAO.adicionarMotorista(motorista);
-                        JOptionPane.showMessageDialog(MainFrame.this, "Motorista cadastrado com sucesso!");
-                    }
-                } else {
-                    JOptionPane.showMessageDialog(MainFrame.this, "Tipo inválido. Digite 'Passageiro' ou 'Motorista'.");
+                    motoristaDAO.adicionarMotorista(motorista);
+                    JOptionPane.showMessageDialog(MainFrame.this, "Motorista cadastrado com sucesso!");
                 }
             }
         });
-        panelPessoa.add(cadastrarPessoaButton);
+        panelPessoa.add(cadastrarPessoaButton, BorderLayout.SOUTH);
 
         // Painel de Solicitação de Viagem
         JPanel panelViagem = new JPanel(new GridLayout(5, 2));
