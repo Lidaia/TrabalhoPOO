@@ -5,6 +5,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import conection.BDConection;
+import java.util.List;
+import java.util.ArrayList;
+
 
 public class PassageiroDAO {
     private Connection conexao;
@@ -69,29 +72,25 @@ public class PassageiroDAO {
     }
 
     // Método para recuperar um passageiro pelo número do CPF
-    public Passageiro recuperarPassageiro(long cpfPassag) {
-        Passageiro passageiro = null;
-        String sql = "SELECT * FROM PASSAGEIROS WHERE Cpf_passag=?";
-
-        try {
-            PreparedStatement stmt = conexao.prepareStatement(sql);
-            stmt.setLong(1, cpfPassag);
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                passageiro = new Passageiro();
-                passageiro.setCpfPassag(rs.getLong("Cpf_passag"));
-                passageiro.setCartaoCred(rs.getString("Cartao_cred"));
-                passageiro.setBandeiraCartao(rs.getString("Bandeira_cartao"));
-                passageiro.setCidadeOrig(rs.getString("Cidade_orig"));
-            }
-
-            rs.close();
-            stmt.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
+   public List<Passageiro> recuperarPassageiros() {
+    List<Passageiro> passageiros = new ArrayList<>();
+    String sql = "SELECT * FROM PASSAGEIROS";
+    try {
+        PreparedStatement stmt = conexao.prepareStatement(sql);
+        ResultSet rs = stmt.executeQuery();
+        while (rs.next()) {
+            Passageiro passageiro = new Passageiro();
+            passageiro.setCpfPassag(rs.getLong("cpf_passag"));
+            passageiro.setCartaoCred(rs.getString("cartao_cred"));
+            passageiro.setBandeiraCartao(rs.getString("bandeira_cartao"));
+            passageiro.setCidadeOrig(rs.getString("cidade_orig"));
+            passageiros.add(passageiro);
         }
-
-        return passageiro;
+        rs.close();
+        stmt.close();
+    } catch (SQLException e) {
+        e.printStackTrace();
     }
+    return passageiros;
+}
 }

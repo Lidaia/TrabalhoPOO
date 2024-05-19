@@ -1,32 +1,35 @@
 package Main;
-
-import java.awt.*;
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-import DAO.PassageiroDAO;
-import DAO.MotoristaDAO;
-import DAO.PessoasDAO;
-import DAO.ViagemDAO;
 import entidades.Passageiro;
 import entidades.Motorista;
 import entidades.Pessoas;
 import entidades.Viagem;
-import conection.BDConection;
+import DAO.PassageiroDAO;
+import DAO.MotoristaDAO;
+import DAO.PessoasDAO;
+import DAO.ViagemDAO;
+import java.util.List;
+import java.util.ArrayList;
 
 class MainFrame extends JFrame {
+
     private PassageiroDAO passageiroDAO;
     private MotoristaDAO motoristaDAO;
     private PessoasDAO pessoasDAO;
     private ViagemDAO viagemDAO;
+
+    private JComboBox<String> sexoComboBox;
 
     public MainFrame() {
         passageiroDAO = new PassageiroDAO();
         motoristaDAO = new MotoristaDAO();
         pessoasDAO = new PessoasDAO();
         viagemDAO = new ViagemDAO();
-        
+
         setTitle("Sistema de Cadastro e Viagem");
         setSize(500, 400);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -54,8 +57,8 @@ class MainFrame extends JFrame {
         commonPanel.add(telefoneField);
 
         commonPanel.add(new JLabel("Sexo:"));
-        JTextField sexoField = new JTextField();
-        commonPanel.add(sexoField);
+        sexoComboBox = new JComboBox<>(new String[]{"", "F", "M"});
+        commonPanel.add(sexoComboBox);
 
         commonPanel.add(new JLabel("Email:"));
         JTextField emailField = new JTextField();
@@ -87,7 +90,7 @@ class MainFrame extends JFrame {
                     especificoPanel.add(new JLabel("Cidade de Origem:"));
                     JTextField cidadeField = new JTextField();
                     especificoPanel.add(cidadeField);
-                    
+
                     especificoPanel.revalidate();
                     especificoPanel.repaint();
                 } else if (tipoComboBox.getSelectedItem().equals("Motorista")) {
@@ -107,7 +110,7 @@ class MainFrame extends JFrame {
                     especificoPanel.add(new JLabel("Conta:"));
                     JTextField contaField = new JTextField();
                     especificoPanel.add(contaField);
-                    
+
                     especificoPanel.revalidate();
                     especificoPanel.repaint();
                 }
@@ -127,7 +130,7 @@ class MainFrame extends JFrame {
                 String nome = nomeField.getText();
                 String endereco = enderecoField.getText();
                 int telefone = Integer.parseInt(telefoneField.getText());
-                char sexo = sexoField.getText().charAt(0);
+                char sexo = sexoComboBox.getSelectedItem().toString().charAt(0);
                 String email = emailField.getText();
                 String tipo = (String) tipoComboBox.getSelectedItem();
 
@@ -145,7 +148,6 @@ class MainFrame extends JFrame {
                     JTextField cartaoField = (JTextField) especificoPanel.getComponent(1);
                     JTextField bandeiraField = (JTextField) especificoPanel.getComponent(3);
                     JTextField cidadeField = (JTextField) especificoPanel.getComponent(5);
-
                     Passageiro passageiro = new Passageiro();
                     passageiro.setCpfPassag(cpf);
                     passageiro.setCartaoCred(cartaoField.getText());
@@ -208,15 +210,78 @@ class MainFrame extends JFrame {
                 viagem.setLocalDestViag(localDest);
 
                 viagemDAO.adicionarViagem(viagem);
+
                 JOptionPane.showMessageDialog(MainFrame.this, "Procurando um motorista perto...");
+
+                // Exibir o nome do último motorista cadastrado
+                JOptionPane.showMessageDialog(MainFrame.this, "Motorista a caminho ");
             }
         });
         panelViagem.add(solicitarViagemButton);
 
+        JButton cancelarCorridaButton = new JButton("Cancelar Corrida");
+        cancelarCorridaButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int confirmacao = JOptionPane.showConfirmDialog(MainFrame.this, "Tem certeza que deseja cancelar a corrida?", "Cancelar Corrida", JOptionPane.YES_NO_OPTION);
+                if (confirmacao == JOptionPane.YES_OPTION) {
+                    // Lógica para cancelar a corrida
+                    // Aqui você pode chamar um método para cancelar a corrida no banco de dados
+                    // Exemplo: viagemDAO.cancelarViagem(cpfPassViag, cpfMotViag, placaVeicViag, dtHoraInicio);
+
+                    JOptionPane.showMessageDialog(MainFrame.this, "Corrida cancelada com sucesso!");
+                }
+            }
+        });
+        panelViagem.add(cancelarCorridaButton);
+
+        // Adicionar botão para listar passageiros e motoristas
+        JButton listarPassageirosMotoristasButton = new JButton("Listar Passageiros e Motoristas");
+        listarPassageirosMotoristasButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Listar passageiros e motoristas
+                List<Passageiro> passageiros = passageiroDAO.recuperarPassageiros();
+                List<Motorista> motoristas = motoristaDAO.recuperarMotoristas();
+
+                StringBuilder message = new StringBuilder("Passageiros:\n");
+                for (Passageiro passageiro : passageiros) {
+                    message.append("- ").append(passageiro.getCpfPassag()).append("\n");
+                }
+                message.append("\nMotoristas:\n");
+                for (Motorista motorista : motoristas) {
+                    message.append("- ").append(motorista.getCpfMotorista()).append("\n");
+                }
+
+                JOptionPane.showMessageDialog(MainFrame.this, message.toString());
+            }
+        });
+        panelViagem.add(listarPassageirosMotoristasButton);
+
+        // Adicionar botão para mostrar histórico de corridas
+        JButton historicoCorridasButton = new JButton("Histórico de Corridas");
+        historicoCorridasButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Mostrar histórico de corridas
+                List<Viagem> viagens = viagemDAO.listarViagens();
+
+                StringBuilder message = new StringBuilder("Histórico de Corridas:\n");
+                for (Viagem viagem : viagens) {
+                    message.append("- ").append(viagem.getLocalOrigViag()).append(" para ")
+                            .append(viagem.getLocalDestViag()).append(", Valor: ").append(viagem.getValorPagto())
+                            .append(", Forma de Pagamento: ").append(viagem.getFormaPagto()).append("\n");
+                }
+
+                JOptionPane.showMessageDialog(MainFrame.this, message.toString());
+            }
+        });
+        panelViagem.add(historicoCorridasButton);
+
         // Adicionando os painéis às abas
         tabbedPane.addTab("Cadastrar Pessoa", panelPessoa);
         tabbedPane.addTab("Solicitar Viagem", panelViagem);
-        
+
         add(tabbedPane);
 
         setVisible(true);
@@ -226,3 +291,4 @@ class MainFrame extends JFrame {
         new MainFrame();
     }
 }
+        

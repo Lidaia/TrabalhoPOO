@@ -15,6 +15,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import conection.BDConection;
+import java.util.List;
+import java.util.ArrayList;
 
 public class ViagemDAO {
     private Connection conexao;
@@ -99,40 +101,39 @@ public class ViagemDAO {
     }
 
     // Método para recuperar uma viagem pelo número do CPF do passageiro, do motorista, placa do veículo e data/hora de início
-    public Viagem recuperarViagem(long cpfPassViag, long cpfMotViag, String placaVeicViag, Date dtHoraInicio) {
-        Viagem viagem = null;
-        String sql = "SELECT * FROM VIAGEM WHERE Cpf_pass_viag=? AND Cpf_mot_viag=? AND Placa_veic_viag=? AND Dt_hora_inicio=?";
+    public List<Viagem> listarViagens() {
+    List<Viagem> viagens = new ArrayList<>();
+    String sql = "SELECT * FROM VIAGEM";
 
-        try {
-            PreparedStatement stmt = conexao.prepareStatement(sql);
-            stmt.setLong(1, cpfPassViag);
-            stmt.setLong(2, cpfMotViag);
-            stmt.setString(3, placaVeicViag);
-            stmt.setDate(4, dtHoraInicio);
-            ResultSet rs = stmt.executeQuery();
+    try {
+        PreparedStatement stmt = conexao.prepareStatement(sql);
+        ResultSet rs = stmt.executeQuery();
 
-            if (rs.next()) {
-                viagem = new Viagem();
-                viagem.setCpfPassViag(rs.getLong("Cpf_pass_viag"));
-                viagem.setCpfMotViag(rs.getLong("Cpf_mot_viag"));
-                viagem.setPlacaVeicViag(rs.getString("Placa_veic_viag"));
-                viagem.setLocalOrigViag(rs.getString("Local_orig_viag"));
-                viagem.setLocalDestViag(rs.getString("Local_dest_viag"));
-                viagem.setDtHoraInicio(rs.getDate("Dt_hora_inicio"));
-                viagem.setDtHoraFim(rs.getDate("Dt_hora_fim"));
-                viagem.setQtdePass(rs.getInt("Qtde_pass"));
-                viagem.setFormaPagto(rs.getString("Forma_pagto"));
-                viagem.setValorPagto(rs.getDouble("Valor_pagto"));
-                viagem.setCancelamMot(rs.getString("Cancelam_mot").charAt(0));
-                viagem.setCancelamPass(rs.getString("Cancelam_pass").charAt(0));
-            }
+        while (rs.next()) {
+            Viagem viagem = new Viagem();
+            viagem.setCpfPassViag(rs.getLong("Cpf_pass_viag"));
+            viagem.setCpfMotViag(rs.getLong("Cpf_mot_viag"));
+            viagem.setPlacaVeicViag(rs.getString("Placa_veic_viag"));
+            viagem.setLocalOrigViag(rs.getString("Local_orig_viag"));
+            viagem.setLocalDestViag(rs.getString("Local_dest_viag"));
+            viagem.setDtHoraInicio(rs.getDate("Dt_hora_inicio"));
+            viagem.setDtHoraFim(rs.getDate("Dt_hora_fim"));
+            viagem.setQtdePass(rs.getInt("Qtde_pass"));
+            viagem.setFormaPagto(rs.getString("Forma_pagto"));
+            viagem.setValorPagto(rs.getDouble("Valor_pagto"));
+            viagem.setCancelamMot(rs.getString("Cancelam_mot").charAt(0));
+            viagem.setCancelamPass(rs.getString("Cancelam_pass").charAt(0));
 
-            rs.close();
-            stmt.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
+            viagens.add(viagem);
         }
 
-        return viagem;
+        rs.close();
+        stmt.close();
+    } catch (SQLException e) {
+        e.printStackTrace();
     }
+
+    return viagens;
+}
+
 }

@@ -6,6 +6,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import conection.BDConection;
+import java.util.List;
+import java.util.ArrayList;
 
 public class MotoristaDAO {
     private Connection conexao;
@@ -72,30 +74,26 @@ public class MotoristaDAO {
     }
 
     // Método para recuperar um motorista pelo número do CPF
-    public Motorista recuperarMotorista(long cpfMotorista) {
-        Motorista motorista = null;
-        String sql = "SELECT * FROM MOTORISTAS WHERE Cpf_motorista=?";
-
-        try {
-            PreparedStatement stmt = conexao.prepareStatement(sql);
-            stmt.setLong(1, cpfMotorista);
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                motorista = new Motorista();
-                motorista.setCpfMotorista(rs.getLong("Cpf_motorista"));
-                motorista.setCnh(rs.getString("CNH"));
-                motorista.setBancoMot(rs.getInt("Banco_mot"));
-                motorista.setAgenciaMot(rs.getInt("Agencia_mot"));
-                motorista.setContaMot(rs.getInt("Conta_mot"));
-            }
-
-            rs.close();
-            stmt.close();
-        } catch (SQLException e) {
-            e.printStackTrace();
+    public List<Motorista> recuperarMotoristas() {
+    List<Motorista> motoristas = new ArrayList<>();
+    String sql = "SELECT * FROM MOTORISTAS";
+    try {
+        PreparedStatement stmt = conexao.prepareStatement(sql);
+        ResultSet rs = stmt.executeQuery();
+        while (rs.next()) {
+            Motorista motorista = new Motorista();
+            motorista.setCpfMotorista(rs.getLong("Cpf_motorista"));
+            motorista.setCnh(rs.getString("CNH"));
+            motorista.setBancoMot(rs.getInt("Banco"));
+            motorista.setAgenciaMot(rs.getInt("Agencia"));
+            motorista.setContaMot(rs.getInt("Conta"));
+            motoristas.add(motorista);
         }
-
-        return motorista;
+        rs.close();
+        stmt.close();
+    } catch (SQLException e) {
+        e.printStackTrace();
     }
+    return motoristas;
+}
 }
